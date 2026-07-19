@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="理然法律事務所案件管理暨 AI 法律工作臺：整合案件進度、期限、卷證、Google Drive、AI 文件分類與稽核紀錄。">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#17324D">
+  <title>儀表板｜律所案件管理暨 AI 法律工作臺</title>
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"SoftwareApplication",
+    "name":"律所案件管理暨 AI 法律工作臺",
+    "applicationCategory":"BusinessApplication",
+    "operatingSystem":"Web",
+    "description":"以案件為中心，整合期限、任務、文件、AI 分析與人工核准的律所工作臺。"
+  }
+  </script>
+  <style>
+    :root{
+      --navy:#17324D;--navy-2:#10283a;--primary:#1F4E78;--secondary:#2F75B5;
+      --canvas:#F7FAFC;--surface:#fff;--surface-2:#f2f6f9;--text:#1F2937;--muted:#5E6B78;
+      --border:#D6E0E8;--success:#2E7D32;--warning:#A86208;--danger:#B42318;
+      --info:#176B87;--ai:#6B4EFF;--court:#7E2430;--gold:#D3B47A;
+      --shadow-1:0 1px 2px rgba(16,40,58,.08),0 6px 20px rgba(16,40,58,.08);
+      --shadow-2:0 12px 34px rgba(16,40,58,.16);
+      --r-sm:7px;--r-md:11px;--r-lg:15px;
+      --sidebar:248px;--topbar:72px;--density:1;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--canvas);color:var(--text);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:14px;line-height:1.55;overflow-x:hidden}
+    button,input,select,textarea{font:inherit}
+    button,a,input,select,[tabindex]{outline:none}
+    :focus-visible{box-shadow:0 0 0 3px rgba(47,117,181,.28)!important;border-color:var(--secondary)!important}
+    button{cursor:pointer}
+    button:disabled{cursor:not-allowed;opacity:.52}
+    a{color:inherit;text-decoration:none}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .icon{width:1.25em;height:1.25em;display:inline-block;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .app{min-height:100vh}
+    .sidebar{
+      position:fixed;inset:0 auto 0 0;width:var(--sidebar);z-index:50;color:#eef7fb;
+      background:
+        radial-gradient(circle at 22% 8%,rgba(61,175,184,.16),transparent 28%),
+        linear-gradient(180deg,var(--navy-2),#0d2634 72%,#102b39);
+      border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;
+    }
+    .brand{height:176px;display:flex;align-items:center;justify-content:center;text-align:center;border-bottom:1px solid rgba(255,255,255,.08)}
+    .brand-mark{width:58px;height:58px;margin:0 auto 8px;color:var(--gold)}
+    .brand-name{font-family:serif;font-size:22px;letter-spacing:.14em;color:#e7c78e}
+    .brand-en{font-size:9px;letter-spacing:.22em;color:#d9bd87;margin-top:3px}
+    .sidebar-nav{padding:14px 14px 8px;display:grid;gap:4px}
+    .nav-item{
+      min-height:50px;padding:0 15px;border-radius:9px;display:flex;align-items:center;gap:14px;
+      color:#dce8ee;border:1px solid transparent;transition:.18s ease;position:relative;
+    }
+    .nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+    .nav-item.active{background:linear-gradient(90deg,rgba(69,180,190,.24),rgba(255,255,255,.04));border-color:rgba(100,210,215,.14);color:#93e2e3}
+    .nav-item.active:before{content:"";position:absolute;left:-1px;top:7px;bottom:7px;width:3px;border-radius:0 3px 3px 0;background:#67d1d0}
+    .nav-item .icon{font-size:18px}
+    .nav-label{font-size:15px;white-space:nowrap}
+    .sidebar-bottom{margin:auto 15px 18px;padding:18px 14px;border:1px solid rgba(255,255,255,.16);border-radius:11px;text-align:center;color:#e6c58c;background:rgba(255,255,255,.025)}
+    .sidebar-bottom .icon{font-size:27px;margin-bottom:6px}
+    .sidebar-bottom strong{display:block;font-size:12px;letter-spacing:.08em}
+    .sidebar-bottom small{display:block;font-size:8px;margin-top:7px;letter-spacing:.08em}
+    .scrim{display:none;position:fixed;inset:0;background:rgba(7,23,33,.52);z-index:45}
+    .main-shell{margin-left:var(--sidebar);min-height:100vh}
+    .topbar{
+      height:var(--topbar);position:sticky;top:0;z-index:40;background:rgba(247,250,252,.88);backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(214,224,232,.9);display:flex;align-items:center;padding:0 24px;gap:18px;
+    }
+    .menu-btn{display:none!important}
+    .page-title{min-width:270px}
+    .page-title h1{margin:0;font-family:serif;font-size:26px;letter-spacing:.08em;line-height:1.1}
+    .page-title p{margin:5px 0 0;color:var(--muted);font-size:12px}
+    .search-wrap{margin-left:auto;width:min(460px,42vw);position:relative}
+    .search-input{
+      width:100%;height:42px;border:1px solid var(--border);border-radius:999px;background:#fff;
+      padding:0 52px 0 42px;color:var(--text);box-shadow:0 2px 12px rgba(16,40,58,.04)
+    }
+    .search-wrap>.icon{position:absolute;left:15px;top:12px;color:var(--muted)}
+    .kbd{position:absolute;right:11px;top:9px;border:1px solid var(--border);background:#f7f9fb;color:var(--muted);padding:2px 7px;border-radius:6px;font-size:11px}
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{
+      width:42px;height:42px;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--muted);
+      display:grid;place-items:center;position:relative;transition:.16s
+    }
+    .icon-btn:hover{color:var(--primary);background:#f6fafc;transform:translateY(-1px)}
+    .notification-dot{position:absolute;right:-3px;top:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--danger);color:#fff;font-size:10px;display:grid;place-items:center;border:2px solid #fff}
+    .profile-btn{
+      height:46px;min-width:180px;border:1px solid var(--border);border-radius:9px;background:#fff;padding:4px 10px;
+      display:flex;align-items:center;gap:10px;text-align:left;color:var(--text)
+    }
+    .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(145deg,#e7eef3,#c4d3de);display:grid;place-items:center;font-family:serif;font-weight:700;color:var(--navy)}
+    .profile-name{font-weight:700;font-size:13px}.profile-role{font-size:10px;color:var(--muted)}
+    .profile-btn .chev{margin-left:auto}
+    .popover{
+      display:none;position:absolute;right:24px;top:62px;width:310px;background:#fff;border:1px solid var(--border);
+      border-radius:12px;box-shadow:var(--shadow-2);padding:8px;z-index:70
+    }
+    .popover.open{display:block;animation:pop .15s ease-out}
+    .popover-title{font-weight:800;padding:9px 10px;border-bottom:1px solid var(--border)}
+    .pop-row{display:flex;gap:10px;padding:10px;border-radius:8px}
+    .pop-row:hover{background:var(--surface-2)}
+    .pop-row .dot{width:8px;height:8px;margin-top:6px;border-radius:50%;background:var(--danger);flex:0 0 auto}
+    .pop-row p{margin:0;font-size:12px}.pop-row time{font-size:10px;color:var(--muted)}
+    .profile-menu{width:220px}
+    .profile-menu button{width:100%;border:0;background:transparent;padding:10px;border-radius:8px;text-align:left;color:var(--text)}
+    .profile-menu button:hover{background:var(--surface-2)}
+    .workspace{max-width:1600px;margin:0 auto;padding:20px 22px 92px}
+    .kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:14px}
+    .kpi-card{
+      min-height:102px;border:1px solid rgba(255,255,255,.1);border-radius:var(--r-md);color:#fff;padding:14px 15px;
+      display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-1);position:relative;overflow:hidden;transition:.17s;
+      background:linear-gradient(135deg,#174a5c,#073442);
+    }
+    .kpi-card:nth-child(2){background:linear-gradient(135deg,#234565,#152c4b)}
+    .kpi-card:nth-child(3){background:linear-gradient(135deg,#285250,#173c40)}
+    .kpi-card:nth-child(4){background:linear-gradient(135deg,#4c4a45,#282826)}
+    .kpi-card:nth-child(5){background:linear-gradient(135deg,#494453,#292631)}
+    .kpi-card:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(16,40,58,.18)}
+    .kpi-card.selected{box-shadow:0 0 0 3px rgba(47,117,181,.35),var(--shadow-2)}
+    .kpi-icon{width:52px;height:52px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;color:#dffbff;background:rgba(13,36,48,.32);border:1px solid rgba(151,238,241,.35);box-shadow:inset 0 0 22px rgba(66,210,220,.17),0 5px 14px rgba(0,0,0,.2)}
+    .kpi-icon .icon{font-size:24px}.kpi-content{min-width:0;flex:1}
+    .kpi-label{font-size:12px;color:#e8f0f3;white-space:nowrap}.kpi-number{font-size:25px;font-weight:700;line-height:1.2;margin-top:2px}.kpi-number small{font-size:11px;font-weight:500}
+    .kpi-meta{font-size:10px;color:#c8d6dc;margin-top:3px}.kpi-meta b{color:#e6c383}
+    .sparkline{position:absolute;right:9px;bottom:16px;width:52px;height:25px;opacity:.85}
+    .dashboard-grid{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(330px,1fr);gap:14px}
+    .left-column,.right-column{display:grid;gap:14px;align-content:start}
+    .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-1);overflow:hidden}
+    .panel-header{min-height:48px;padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+    .panel-title{font-size:15px;font-weight:800;margin:0}.panel-subtitle{font-size:11px;color:var(--muted);margin-left:8px}
+    .panel-actions{margin-left:auto;display:flex;gap:8px}
+    .btn{
+      min-height:34px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);padding:6px 11px;
+      display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:650;transition:.15s;
+    }
+    .btn:hover{background:#f5f8fa;border-color:#bacad6}.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}.btn.primary:hover{background:#173f64}
+    .btn.ai{background:linear-gradient(135deg,#6B4EFF,#4b35d4);color:#fff;border-color:#5c43e8}
+    .btn.danger{color:var(--danger);border-color:#ecc0bc}.btn.ghost{border-color:transparent;background:transparent}
+    .btn.small{min-height:28px;padding:4px 8px;font-size:11px}.btn.loading .icon{animation:spin .8s linear infinite}
+    .stage-tabs{display:none}
+    .kanban-wrap{padding:0 14px 14px}
+    .kanban{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#eef3f6}
+    .kanban-col{min-width:0;background:#f6f8fa;border-right:1px solid var(--border)}
+    .kanban-col:last-child{border-right:0}
+    .stage-head{
+      height:38px;color:#eaf6f8;background:linear-gradient(90deg,#315f70,#285468);
+      display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;font-weight:700;position:relative;
+    }
+    .stage-head:after{content:"";position:absolute;right:-13px;z-index:2;border-top:19px solid transparent;border-bottom:19px solid transparent;border-left:13px solid #285468}
+    .kanban-col:last-child .stage-head:after{display:none}
+    .stage-count{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:5px;padding:0 6px;font-size:10px}
+    .case-list{padding:8px;display:grid;gap:7px;min-height:208px;align-content:start}
+    .case-card{
+      border:1px solid #dfe7ec;border-radius:7px;background:#fff;padding:9px;min-height:72px;box-shadow:0 1px 3px rgba(16,40,58,.06);
+      transition:.15s;text-align:left;color:var(--text);width:100%;
+    }
+    .case-card:hover{transform:translateY(-1px);border-color:#aac6d6;box-shadow:0 5px 12px rgba(16,40,58,.1)}
+    .case-code{font-size:9px;color:var(--muted);letter-spacing:.03em}.case-name{font-size:11px;font-weight:800;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .case-meta{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:9px;color:var(--muted)}
+    .tag{display:inline-flex;align-items:center;gap:4px;border-radius:5px;padding:2px 6px;font-size:9px;font-weight:700;background:#e8f5f5;color:#176b70}
+    .tag.warn{background:#fff3de;color:var(--warning)}.tag.danger{background:#fdeceb;color:var(--danger)}.tag.court{background:#f5e8ea;color:var(--court)}
+    .mini-progress{height:3px;background:#e6edf1;border-radius:3px;margin-top:7px;overflow:hidden}.mini-progress span{display:block;height:100%;background:linear-gradient(90deg,#55a7dd,#4fc1c2);border-radius:3px}
+    .empty-state{padding:28px 18px;text-align:center;color:var(--muted)}.empty-state .icon{font-size:34px;color:#9eb2bf}.empty-state h3{font-size:14px;color:var(--text);margin:8px 0 3px}.empty-state p{font-size:11px;margin:0 0 12px}
+    .pipeline{padding:12px 14px 14px}
+    .flow{display:grid;grid-template-columns:repeat(6,1fr);gap:34px;align-items:stretch}
+    .flow-step{min-height:94px;border:1px solid var(--border);border-radius:9px;background:linear-gradient(180deg,#fff,#f7fafb);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px;position:relative}
+    .flow-step:not(:last-child):after{content:"→";position:absolute;right:-25px;top:34px;color:#6f8999;font-size:22px}
+    .flow-icon{font-size:28px;color:var(--primary);margin-bottom:5px}.flow-step.ai-step .flow-icon{color:var(--ai)}.flow-step.db-step .flow-icon{color:#0b5b83}
+    .flow-step strong{font-size:11px}.flow-step small{font-size:9px;color:var(--muted);line-height:1.35;margin-top:3px}
+    .security-note{margin-top:9px;font-size:10px;color:var(--muted);display:flex;gap:6px;align-items:center}.security-note .icon{color:var(--info)}
+    .analytics-grid{display:grid;grid-template-columns:.9fr 1.15fr}
+    .chart-block{padding:12px 15px 14px;min-height:192px}.chart-block+ .chart-block{border-left:1px solid var(--border)}
+    .chart-title{font-weight:800;font-size:13px;margin-bottom:10px}
+    .donut-layout{display:flex;align-items:center;gap:20px}
+    .donut{width:116px;height:116px;border-radius:50%;background:conic-gradient(#3ea6a5 0 68%,#4b9fd7 68% 86%,#3575b8 86% 95%,#8ea4b6 95%);position:relative;flex:0 0 auto}
+    .donut:before{content:"";position:absolute;inset:17px;background:#fff;border-radius:50%}.donut-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center;font-size:10px;color:var(--muted)}.donut-center b{font-size:23px;color:var(--text)}
+    .legend{display:grid;gap:7px;font-size:10px}.legend-row{display:flex;align-items:center;gap:7px}.legend-dot{width:8px;height:8px;border-radius:50%;background:#3ea6a5}.legend-row:nth-child(2) .legend-dot{background:#4b9fd7}.legend-row:nth-child(3) .legend-dot{background:#3575b8}.legend-row:nth-child(4) .legend-dot{background:#8ea4b6}.legend-row b{margin-left:auto}
+    .line-chart{width:100%;height:125px;display:block}.chart-caption{display:flex;justify-content:space-between;font-size:9px;color:var(--muted)}
+    .ai-head .ai-orb{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--ai);background:#f0edff;box-shadow:0 0 18px rgba(107,78,255,.25)}
+    .ai-list{display:grid}
+    .ai-row{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:9px;padding:11px 13px;border-bottom:1px solid var(--border);align-items:center}
+    .ai-row:last-child{border-bottom:0}.file-type{width:30px;height:34px;border-radius:5px;display:grid;place-items:center;font-size:9px;font-weight:900;background:#fff0ef;color:#d92d20;border:1px solid #f1d0cd}.file-type.doc{background:#edf5ff;color:#2168b5;border-color:#cbdff2}
+    .file-main{min-width:0}.file-name{font-weight:750;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.file-meta{color:var(--muted);font-size:9px;margin-top:2px}.ai-suggestion{font-size:9px;color:var(--muted);margin-bottom:4px;text-align:right}.ai-suggestion b{color:var(--success)}
+    .ai-actions{display:flex;gap:5px;justify-content:flex-end}.more-btn{width:28px;border:0;background:transparent;color:var(--muted)}
+    .list-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;padding:9px 13px;align-items:center;border-bottom:1px solid var(--border);font-size:10px}.list-row:last-child{border-bottom:0}.list-row time{color:var(--muted)}
+    .status-icon{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:var(--success);background:#e7f4e9}.status-icon.error{color:var(--danger);background:#fdeceb}
+    .list-footer{padding:8px 12px;text-align:right;border-top:1px solid var(--border)}
+    .bottom-nav{display:none}
+    .drawer{
+      position:fixed;top:0;right:0;bottom:0;width:min(520px,96vw);z-index:90;background:#fff;box-shadow:-12px 0 40px rgba(16,40,58,.2);
+      transform:translateX(102%);transition:.25s ease;display:flex;flex-direction:column;
+    }
+    .drawer.open{transform:translateX(0)}
+    .drawer-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px}.drawer-header h2{font-size:19px;margin:0}.drawer-header p{margin:4px 0 0;color:var(--muted);font-size:11px}.drawer-header .icon-btn{margin-left:auto}
+    .drawer-body{padding:18px 20px;overflow:auto}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail-card{padding:12px;border:1px solid var(--border);border-radius:9px;background:#fafcfd}.detail-card dt{font-size:10px;color:var(--muted)}.detail-card dd{margin:3px 0 0;font-weight:750;font-size:12px}
+    .timeline{margin-top:18px}.timeline h3{font-size:14px}.timeline-item{position:relative;padding:0 0 16px 22px;border-left:1px solid var(--border);margin-left:6px}.timeline-item:last-child{border-left-color:transparent}.timeline-item:before{content:"";position:absolute;left:-5px;top:2px;width:9px;height:9px;border-radius:50%;background:var(--secondary);box-shadow:0 0 0 3px #e7f1f8}.timeline-item strong{font-size:11px}.timeline-item p{margin:3px 0;color:var(--muted);font-size:10px}
+    .modal-layer{display:none;position:fixed;inset:0;z-index:100;background:rgba(6,22,32,.55);align-items:center;justify-content:center;padding:20px}.modal-layer.open{display:flex}
+    .modal{width:min(620px,100%);max-height:min(820px,92vh);background:#fff;border-radius:14px;box-shadow:0 24px 70px rgba(8,28,40,.3);overflow:hidden;animation:pop .18s ease-out;display:flex;flex-direction:column}
+    .modal-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px}.modal-header h2{margin:0;font-size:18px}.modal-header p{margin:4px 0 0;color:var(--muted);font-size:11px}.modal-header .icon-btn{margin-left:auto}
+    .modal-body{padding:18px;overflow:auto}.modal-footer{padding:13px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:#fafcfd}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:grid;gap:5px}.field.full{grid-column:1/-1}.field label{font-size:11px;font-weight:750}.field input,.field select,.field textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 10px;background:#fff;color:var(--text)}.field textarea{min-height:80px;resize:vertical}.field .help{font-size:9px;color:var(--muted)}.field .error-text{display:none;color:var(--danger);font-size:9px}.field.invalid input,.field.invalid select{border-color:var(--danger)}.field.invalid .error-text{display:block}
+    .alert{padding:10px 12px;border-radius:8px;border:1px solid #e8d6ad;background:#fff8e7;color:#76490c;font-size:10px;display:flex;gap:8px;align-items:flex-start}.alert.ai-alert{border-color:#d9d0ff;background:#f6f3ff;color:#443196}.alert.danger{border-color:#f0c7c3;background:#fff0ef;color:#7f1d17}
+    .preview-card{margin-top:12px;border:1px solid var(--border);border-radius:9px;overflow:hidden}.preview-row{display:grid;grid-template-columns:120px 1fr;border-bottom:1px solid var(--border);font-size:11px}.preview-row:last-child{border-bottom:0}.preview-row dt{margin:0;background:#f6f9fb;color:var(--muted);padding:9px}.preview-row dd{margin:0;padding:9px}
+    .command-modal{width:min(700px,96vw);align-self:flex-start;margin-top:9vh}.command-input-wrap{padding:12px;border-bottom:1px solid var(--border);position:relative}.command-input{width:100%;height:46px;border:0;padding:0 12px 0 40px;font-size:15px}.command-input-wrap>.icon{position:absolute;left:25px;top:27px;color:var(--muted)}.command-results{padding:8px;max-height:430px;overflow:auto}.command-item{width:100%;border:0;background:transparent;border-radius:8px;padding:10px;display:flex;align-items:center;gap:11px;text-align:left;color:var(--text)}.command-item:hover,.command-item.active{background:#edf4f8}.command-item .cmd-icon{width:32px;height:32px;border-radius:7px;background:#e7f0f5;color:var(--primary);display:grid;place-items:center}.command-item small{display:block;color:var(--muted);font-size:10px}.command-empty{text-align:center;padding:34px;color:var(--muted)}
+    .toast-region{position:fixed;right:22px;bottom:22px;z-index:120;display:grid;gap:8px;width:min(360px,calc(100vw - 30px))}
+    .toast{background:#102f42;color:#fff;border-radius:10px;box-shadow:var(--shadow-2);padding:12px 14px;display:flex;gap:10px;align-items:flex-start;animation:toastin .22s ease}.toast.success{border-left:4px solid #5ab267}.toast.error{border-left:4px solid #e36a61}.toast p{margin:0;font-size:11px}.toast strong{display:block;font-size:12px;margin-bottom:2px}.toast button{margin-left:auto;border:0;background:transparent;color:#d7e6ed}
+    .skeleton{position:relative;overflow:hidden;background:#eaf0f4;color:transparent!important}.skeleton:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:shimmer 1.2s infinite}
+    [data-density="compact"]{--density:.84}[data-density="compact"] .workspace{padding-top:14px}[data-density="compact"] .panel-header{min-height:42px;padding-top:8px;padding-bottom:8px}[data-density="compact"] .ai-row,[data-density="compact"] .list-row{padding-top:7px;padding-bottom:7px}[data-density="compact"] .case-card{padding:7px;min-height:62px}
+    @keyframes spin{to{transform:rotate(360deg)}}@keyframes pop{from{opacity:0;transform:translateY(-4px) scale(.985)}to{opacity:1;transform:none}}@keyframes toastin{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}@keyframes shimmer{to{transform:translateX(100%)}}
+    @media (max-width:1439px){
+      :root{--sidebar:76px}.brand{height:92px}.brand-mark{width:42px;height:42px;margin:0}.brand-name,.brand-en,.nav-label,.sidebar-bottom strong,.sidebar-bottom small{display:none}.sidebar-nav{padding:12px 9px}.nav-item{justify-content:center;padding:0}.nav-item .icon{font-size:20px}.sidebar-bottom{margin: auto 10px 16px;padding:14px 8px}
+      .page-title{min-width:230px}.kpi-grid{grid-template-columns:repeat(3,1fr)}.kpi-card:nth-child(4),.kpi-card:nth-child(5){min-height:90px}.dashboard-grid{grid-template-columns:minmax(0,1.8fr) minmax(310px,1fr)}
+    }
+    @media (max-width:1100px){
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}.kpi-card:last-child{grid-column:span 2}.dashboard-grid{grid-template-columns:1fr}.right-column{grid-template-columns:1fr 1fr}.right-column .ai-panel{grid-column:1/-1}.flow{gap:24px}.flow-step:not(:last-child):after{right:-18px}
+    }
+    @media (max-width:900px){
+      :root{--sidebar:270px}.sidebar{transform:translateX(-102%);transition:.23s ease}.sidebar.open{transform:translateX(0)}.sidebar.open~.scrim{display:block}.main-shell{margin-left:0}.brand{height:160px}.brand-mark{width:58px;height:58px;margin:0 auto 8px}.brand-name,.brand-en,.nav-label,.sidebar-bottom strong,.sidebar-bottom small{display:block}.sidebar-nav{padding:14px}.nav-item{justify-content:flex-start;padding:0 15px}.menu-btn{display:grid!important}.topbar{padding:0 14px}.page-title{min-width:0}.page-title h1{font-size:21px}.page-title p{display:none}.search-wrap{display:none}.profile-btn{min-width:46px;width:46px;padding:5px}.profile-btn>div:not(.avatar),.profile-btn .chev{display:none}.popover{right:14px}
+      .workspace{padding:15px 14px 88px}.bottom-nav{position:fixed;z-index:41;left:10px;right:10px;bottom:max(8px,env(safe-area-inset-bottom));height:62px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);box-shadow:0 8px 28px rgba(16,40,58,.18);display:grid;grid-template-columns:repeat(5,1fr);padding:5px}.bottom-nav button{border:0;background:transparent;border-radius:10px;color:var(--muted);display:grid;place-items:center;font-size:9px}.bottom-nav button .icon{font-size:19px}.bottom-nav button.active{color:var(--primary);background:#e9f1f6}
+      .flow{grid-template-columns:repeat(3,1fr)}.flow-step:nth-child(3):after{display:none}.flow-step:not(:last-child):after{right:-18px}.analytics-grid{grid-template-columns:1fr}.chart-block+.chart-block{border-left:0;border-top:1px solid var(--border)}
+    }
+    @media (max-width:680px){
+      .topbar{height:64px}.page-title h1{font-size:19px}.top-actions{gap:6px}.top-actions .icon-btn{width:39px;height:39px}.profile-btn{height:39px;width:39px;min-width:39px}.avatar{width:29px;height:29px}
+      .kpi-grid{grid-template-columns:1fr 1fr;gap:9px}.kpi-card{min-height:86px;padding:11px}.kpi-card:last-child{grid-column:1/-1}.kpi-icon{width:43px;height:43px}.kpi-number{font-size:21px}.sparkline{display:none}
+      .panel-header{align-items:flex-start;flex-wrap:wrap}.panel-subtitle{display:block;margin:2px 0 0;width:100%}.panel-actions{position:absolute;right:14px}.panel{position:relative}#cases .panel-actions{position:static;width:100%;margin-left:0;overflow-x:auto;flex-wrap:nowrap}#cases .panel-actions .btn{flex:0 0 auto}
+      .kanban{display:block}.kanban-col{display:none;border-right:0}.kanban-col.mobile-active{display:block}.stage-tabs{display:flex;overflow:auto;gap:6px;padding:9px 14px 7px;scrollbar-width:none}.stage-tabs button{flex:0 0 auto;border:1px solid var(--border);border-radius:999px;background:#fff;padding:6px 9px;font-size:10px;color:var(--muted)}.stage-tabs button.active{background:var(--primary);border-color:var(--primary);color:#fff}.stage-head:after{display:none}.case-list{min-height:120px}
+      .right-column{grid-template-columns:1fr}.right-column .ai-panel{grid-column:auto}.ai-row{grid-template-columns:30px minmax(0,1fr)}.ai-controls{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}.ai-suggestion{text-align:left;margin:0}
+      .flow{grid-template-columns:1fr 1fr;gap:24px}.flow-step:nth-child(3):after{display:block}.flow-step:nth-child(even):after{display:none}
+      .donut-layout{justify-content:center}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.preview-row{grid-template-columns:1fr}.preview-row dt{padding-bottom:2px}.preview-row dd{padding-top:2px}.detail-grid{grid-template-columns:1fr}
+      .toast-region{right:15px;bottom:82px}.profile-menu{right:14px}
+    }
+    @media (max-width:440px){
+      .workspace{padding-left:10px;padding-right:10px}.kpi-grid{grid-template-columns:1fr}.kpi-card:last-child{grid-column:auto}.topbar{padding:0 10px}.page-title h1{font-size:17px}.top-actions .icon-btn:first-child{display:none}.panel-header{padding-left:12px;padding-right:12px}.kanban-wrap,.pipeline{padding-left:9px;padding-right:9px}.flow{grid-template-columns:1fr}.flow-step:after{display:none!important}.donut-layout{flex-direction:column;gap:12px}.drawer{width:100%}
+    }
+    @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+    @media print{.sidebar,.topbar,.bottom-nav,.panel-actions,.toast-region{display:none!important}.main-shell{margin:0}.workspace{padding:0}.panel{box-shadow:none;break-inside:avoid}}
+  </style>
+</head>
+<body>
+
+<svg aria-hidden="true" class="sr-only">
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></symbol>
+  <symbol id="i-briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-ai" viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="4"/></symbol>
+  <symbol id="i-stack" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.17.36.48.72 1 .95.22.1.46.15.7.15H21v4h-.09a1.7 1.7 0 0 0-1.51.9z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M6 2h12M6 22h12M7 2c0 5 2 7 5 10-3 3-5 5-5 10M17 2c0 5-2 7-5 10 3 3 5 5 5 10"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9 5a3 3 0 0 0-5 2 3 3 0 0 0 1 5 3 3 0 0 0 4 5v2M15 5a3 3 0 0 1 5 2 3 3 0 0 1-1 5 3 3 0 0 1-4 5v2M9 5v14M15 5v14M9 9H7M15 9h2M9 14H7M15 14h2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-drive" viewBox="0 0 24 24"><path d="m8 3-6 11 3 5h14l3-5-6-11z"/><path d="m8 3 4 7M16 3l-4 7M2 14h20M7 19l5-9 5 9"/></symbol>
+  <symbol id="i-api" viewBox="0 0 24 24"><path d="M5 7h4V3M19 7h-4V3M5 17h4v4M19 17h-4v4M9 12h6M12 9v6"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20 13 11 22l-9-9V4h9z"/><circle cx="7" cy="9" r="1"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-15-4l-2 3M4 3v7h7M4 13a8 8 0 0 0 15 4l2-3M20 21v-7h-7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 21h20z"/><path d="M12 9v5M12 18h.01"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></symbol>
+</svg>
+
+<div class="app" id="app">
+  <aside class="sidebar" id="sidebar" aria-label="主要導覽">
+    <div class="brand">
+      <div>
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M8 52h48M13 47h38M17 19h30M21 14h22M26 9h12M15 23h34M19 23v24M27 23v24M37 23v24M45 23v24" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M32 4 9 18h46z" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M29 28h6v12h-6z" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <div class="brand-name">理然法律事務所</div>
+        <div class="brand-en">LI RAN LAW FIRM</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#dashboard" aria-current="page"><svg class="icon"><use href="#i-grid"/></svg><span class="nav-label">儀表板</span></a>
+      <a class="nav-item" href="#cases"><svg class="icon"><use href="#i-briefcase"/></svg><span class="nav-label">案件中心</span></a>
+      <a class="nav-item" href="#documents"><svg class="icon"><use href="#i-file"/></svg><span class="nav-label">文件庫</span></a>
+      <a class="nav-item" href="#ai-classify"><svg class="icon"><use href="#i-ai"/></svg><span class="nav-label">AI 分類</span></a>
+      <a class="nav-item" href="#evidence"><svg class="icon"><use href="#i-stack"/></svg><span class="nav-label">卷證整理</span></a>
+      <a class="nav-item" href="#calendar"><svg class="icon"><use href="#i-calendar"/></svg><span class="nav-label">開庭行程</span></a>
+      <a class="nav-item" href="#tasks"><svg class="icon"><use href="#i-check"/></svg><span class="nav-label">任務追蹤</span></a>
+      <a class="nav-item" href="#team"><svg class="icon"><use href="#i-users"/></svg><span class="nav-label">團隊協作</span></a>
+      <a class="nav-item" href="#reports"><svg class="icon"><use href="#i-chart"/></svg><span class="nav-label">報表分析</span></a>
+      <a class="nav-item" href="#settings"><svg class="icon"><use href="#i-settings"/></svg><span class="nav-label">設定</span></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <svg class="icon"><use href="#i-shield"/></svg>
+      <strong>專業 · 誠信 · 創新</strong>
+      <small>EXPERTISE / INTEGRITY / INNOVATION</small>
+    </div>
+  </aside>
+  <div class="scrim" id="sidebarScrim" aria-hidden="true"></div>
+
+  <div class="main-shell">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="開啟導覽選單" aria-controls="sidebar" aria-expanded="false"><svg class="icon"><use href="#i-menu"/></svg></button>
+      <div class="page-title">
+        <h1>儀表板</h1>
+        <p>早安，陳律師 · 掌握今日案件與文件動態</p>
+      </div>
+      <div class="search-wrap">
+        <svg class="icon"><use href="#i-search"/></svg>
+        <label class="sr-only" for="globalSearch">搜尋案件、文件、標籤或關鍵字</label>
+        <input class="search-input" id="globalSearch" type="search" placeholder="搜尋案件、文件、標籤或關鍵字…" autocomplete="off">
+        <span class="kbd">⌘K</span>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="syncBtn" aria-label="同步 Google Drive" title="同步 Google Drive"><svg class="icon"><use href="#i-refresh"/></svg></button>
+        <button class="icon-btn" id="notificationBtn" aria-label="通知，3 則未讀" aria-expanded="false"><svg class="icon"><use href="#i-bell"/></svg><span class="notification-dot">3</span></button>
+        <button class="profile-btn" id="profileBtn" aria-label="使用者選單" aria-expanded="false">
+          <span class="avatar" aria-hidden="true">陳</span>
+          <div><div class="profile-name">陳律師</div><div class="profile-role">合夥律師</div></div>
+          <svg class="icon chev"><use href="#i-chevron"/></svg>
+        </button>
+      </div>
+      <div class="popover" id="notificationPopover" role="dialog" aria-label="通知中心">
+        <div class="popover-title">通知中心</div>
+        <div class="pop-row"><span class="dot"></span><div><p><strong>KZY001</strong> 答辯期限剩 2 天，尚未指定備援人。</p><time>10 分鐘前</time></div></div>
+        <div class="pop-row"><span class="dot" style="background:var(--warning)"></span><div><p>23 份文件等待 AI 分類人工確認。</p><time>今天 10:32</time></div></div>
+        <div class="pop-row"><span class="dot" style="background:var(--info)"></span><div><p>Google Drive 已新增 36 份檔案。</p><time>今天 10:32</time></div></div>
+      </div>
+      <div class="popover profile-menu" id="profilePopover" role="menu">
+        <button role="menuitem" data-density-action="comfortable">舒適密度</button>
+        <button role="menuitem" data-density-action="compact">緊湊密度</button>
+        <button role="menuitem" id="openNewCaseFromMenu">新增案件</button>
+        <button role="menuitem">帳號與權限</button>
+      </div>
+    </header>
+
+    <main class="workspace" id="dashboard">
+      <section class="kpi-grid" aria-label="案件關鍵指標">
+        <button class="kpi-card" data-filter="active" aria-pressed="false">
+          <span class="kpi-icon"><svg class="icon"><use href="#i-briefcase"/></svg></span>
+          <span class="kpi-content"><span class="kpi-label">進行中案件</span><span class="kpi-number">58<small> 件</small></span><span class="kpi-meta">較上週 <b>↑ 12%</b></span></span>
+          <svg class="sparkline" viewBox="0 0 52 25" aria-hidden="true"><polyline points="1,20 7,13 12,17 18,7 24,11 30,8 36,13 43,4 51,7" fill="none" stroke="#6ee2e6" stroke-width="1.5"/></svg>
+        </button>
+        <button class="kpi-card" data-filter="review" aria-pressed="false">
+          <span class="kpi-icon"><svg class="icon"><use href="#i-brain"/></svg></span>
+          <span class="kpi-content"><span class="kpi-label">待人工確認分類</span><span class="kpi-number" id="reviewCount">23<small> 件</small></span><span class="kpi-meta">較昨日 <b>↑ 8 件</b></span></span>
+          <svg class="sparkline" viewBox="0 0 52 25" aria-hidden="true"><polyline points="1,21 7,18 13,8 19,14 25,10 31,17 38,11 44,12 51,5" fill="none" stroke="#7bb0ff" stroke-width="1.5"/></svg>
+        </button>
+        <button class="kpi-card" data-filter="new" aria-pressed="false">
+          <span class="kpi-icon"><svg class="icon"><use href="#i-file"/></svg></span>
+          <span class="kpi-content"><span class="kpi-label">今日新增文件</span><span class="kpi-number" id="newDocsCount">36<small> 份</small></span><span class="kpi-meta">較昨日 <b>↑ 22%</b></span></span>
+          <svg class="sparkline" viewBox="0 0 52 25" aria-hidden="true"><polyline points="1,19 7,17 13,12 19,14 25,8 31,11 38,5 44,9 51,3" fill="none" stroke="#6ee2e6" stroke-width="1.5"/></svg>
+        </button>
+        <button class="kpi-card" data-filter="hearing" aria-pressed="false">
+          <span class="kpi-icon"><svg class="icon"><use href="#i-calendar"/></svg></span>
+          <span class="kpi-content"><span class="kpi-label">即將開庭</span><span class="kpi-number">5<small> 件</small></span><span class="kpi-meta"><b>未來 7 天</b></span></span>
+          <svg class="sparkline" viewBox="0 0 52 25" aria-hidden="true"><polyline points="1,21 7,19 13,14 19,15 25,9 31,11 38,6 44,8 51,4" fill="none" stroke="#ead099" stroke-width="1.5"/></svg>
+        </button>
+        <button class="kpi-card" data-filter="overdue" aria-pressed="false">
+          <span class="kpi-icon"><svg class="icon"><use href="#i-hourglass"/></svg></span>
+          <span class="kpi-content"><span class="kpi-label">逾期待辦</span><span class="kpi-number">7<small> 件</small></span><span class="kpi-meta">需儘速處理</span></span>
+          <svg class="sparkline" viewBox="0 0 52 25" aria-hidden="true"><polyline points="1,20 7,16 13,18 19,10 25,12 31,7 38,13 44,8 51,6" fill="none" stroke="#c89ce3" stroke-width="1.5"/></svg>
+        </button>
+      </section>
+
+      <div class="dashboard-grid">
+        <div class="left-column">
+          <section class="panel" id="cases" aria-labelledby="case-progress-title">
+            <div class="panel-header">
+              <div><h2 class="panel-title" id="case-progress-title">案件進度總覽</h2><span class="panel-subtitle">案件狀態、責任人與下一步集中呈現</span></div>
+              <div class="panel-actions"><button class="btn" id="clearFilterBtn" hidden>清除篩選</button><button class="btn" id="newCaseBtn"><svg class="icon"><use href="#i-plus"/></svg>新增案件</button><button class="btn">查看所有案件<svg class="icon"><use href="#i-arrow"/></svg></button></div>
+            </div>
+            <div class="stage-tabs" aria-label="案件階段">
+              <button class="active" data-stage="0">新進案 8</button><button data-stage="1">資料整理中 18</button><button data-stage="2">書狀準備 14</button><button data-stage="3">待開庭 9</button><button data-stage="4">已結案 21</button>
+            </div>
+            <div class="kanban-wrap">
+              <div class="kanban" id="kanban">
+                <div class="kanban-col mobile-active" data-stage-col="0"><div class="stage-head">新進案 <span class="stage-count">8</span></div><div class="case-list">
+                  <button class="case-card" data-status="active new" data-case="KZY001" data-name="康振宇案件" data-stage="新進案"><span class="case-code">KZY001</span><div class="case-name">康振宇案件</div><div class="case-meta"><span>受理日 2026-05-12</span><span class="tag">民事</span></div></button>
+                  <button class="case-card" data-status="active new" data-case="LIN023" data-name="林○○侵權案件" data-stage="新進案"><span class="case-code">LIN023</span><div class="case-name">林○○侵權案件</div><div class="case-meta"><span>受理日 2026-05-18</span><span class="tag">民事</span></div></button>
+                  <button class="case-card" data-status="active overdue" data-case="CHEN027" data-name="租賃糾紛案件" data-stage="新進案"><span class="case-code">CHEN027</span><div class="case-name">租賃糾紛案件</div><div class="case-meta"><span>受理日 2026-05-20</span><span class="tag danger">逾期</span></div></button>
+                </div></div>
+                <div class="kanban-col" data-stage-col="1"><div class="stage-head">資料整理中 <span class="stage-count">18</span></div><div class="case-list">
+                  <button class="case-card" data-status="active review" data-case="LIN023" data-name="林○○侵權案件" data-stage="資料整理中"><span class="case-code">LIN023</span><div class="case-name">林○○侵權案件</div><div class="case-meta"><span>AI 分類待確認</span><span>+7</span></div><div class="mini-progress"><span style="width:60%"></span></div></button>
+                  <button class="case-card" data-status="active review" data-case="WANG015" data-name="王○○給付案件" data-stage="資料整理中"><span class="case-code">WANG015</span><div class="case-name">王○○給付案件</div><div class="case-meta"><span>OCR 處理中</span><span>+3</span></div><div class="mini-progress"><span style="width:40%"></span></div></button>
+                  <button class="case-card" data-status="active review" data-case="HSU009" data-name="許○○醫療糾紛" data-stage="資料整理中"><span class="case-code">HSU009</span><div class="case-name">許○○醫療糾紛</div><div class="case-meta"><span>卷證索引中</span><span>+5</span></div><div class="mini-progress"><span style="width:30%"></span></div></button>
+                </div></div>
+                <div class="kanban-col" data-stage-col="2"><div class="stage-head">書狀準備 <span class="stage-count">14</span></div><div class="case-list">
+                  <button class="case-card" data-status="active" data-case="KZY001" data-name="康振宇案件" data-stage="書狀準備"><span class="case-code">KZY001</span><div class="case-name">康振宇案件</div><div class="case-meta"><span>證據引用確認中</span></div><div class="mini-progress"><span style="width:75%"></span></div></button>
+                  <button class="case-card" data-status="active" data-case="CHEN014" data-name="遺產分割案件" data-stage="書狀準備"><span class="case-code">CHEN014</span><div class="case-name">遺產分割案件</div><div class="case-meta"><span>書狀草稿中</span></div><div class="mini-progress"><span style="width:55%"></span></div></button>
+                </div></div>
+                <div class="kanban-col" data-stage-col="3"><div class="stage-head">待開庭 <span class="stage-count">9</span></div><div class="case-list">
+                  <button class="case-card" data-status="active hearing" data-case="KZY001" data-name="康振宇案件" data-stage="待開庭"><span class="case-code">KZY001</span><div class="case-name">康振宇案件</div><div class="case-meta"><svg class="icon"><use href="#i-calendar"/></svg><span>2026-06-05 09:30</span></div><span class="tag court">臺北地方法院</span></button>
+                  <button class="case-card" data-status="active hearing" data-case="LIN023" data-name="林○○侵權案件" data-stage="待開庭"><span class="case-code">LIN023</span><div class="case-name">林○○侵權案件</div><div class="case-meta"><svg class="icon"><use href="#i-calendar"/></svg><span>2026-06-12 14:00</span></div><span class="tag court">臺北地方法院</span></button>
+                </div></div>
+                <div class="kanban-col" data-stage-col="4"><div class="stage-head">已結案 <span class="stage-count">21</span></div><div class="case-list">
+                  <button class="case-card" data-status="closed" data-case="CHEN014" data-name="遺產分割案件" data-stage="已結案"><span class="case-code">CHEN014</span><div class="case-name">遺產分割案件</div><div class="case-meta"><span>結案日 2026-05-01</span><svg class="icon" style="color:var(--success)"><use href="#i-check"/></svg></div></button>
+                  <button class="case-card" data-status="closed" data-case="WANG008" data-name="抄襲訴訟案件" data-stage="已結案"><span class="case-code">WANG008</span><div class="case-name">抄襲訴訟案件</div><div class="case-meta"><span>結案日 2026-04-28</span><svg class="icon" style="color:var(--success)"><use href="#i-check"/></svg></div></button>
+                </div></div>
+              </div>
+              <div class="empty-state" id="caseEmpty" hidden><svg class="icon"><use href="#i-search"/></svg><h3>沒有符合條件的案件</h3><p>目前篩選條件下沒有案件，請清除篩選後再查看。</p><button class="btn" id="emptyClearBtn">清除篩選</button></div>
+            </div>
+          </section>
+
+          <section class="panel" id="documents" aria-labelledby="flow-title">
+            <div class="panel-header"><h2 class="panel-title" id="flow-title">檔案流轉與資料架構</h2><span class="panel-subtitle">AI 先提供分類建議，律師確認後才移動與建立索引</span></div>
+            <div class="pipeline">
+              <div class="flow">
+                <div class="flow-step"><svg class="icon flow-icon"><use href="#i-drive"/></svg><strong>Google Drive</strong><small>原始檔案權威來源<br>文件先進入 Inbox</small></div>
+                <div class="flow-step"><svg class="icon flow-icon"><use href="#i-api"/></svg><strong>Drive API / Flask</strong><small>掃描檔案與中繼資料<br>權限先於查詢</small></div>
+                <div class="flow-step ai-step"><svg class="icon flow-icon"><use href="#i-ai"/></svg><strong>AI 分析</strong><small>OCR、分類、摘要<br>保留信心與來源頁碼</small></div>
+                <div class="flow-step"><svg class="icon flow-icon"><use href="#i-tag"/></svg><strong>分類建議</strong><small>主分類與標籤<br>提供判斷理由</small></div>
+                <div class="flow-step"><svg class="icon flow-icon"><use href="#i-users"/></svg><strong>律師確認</strong><small>人工審核與修正<br>高風險操作二次確認</small></div>
+                <div class="flow-step db-step"><svg class="icon flow-icon"><use href="#i-database"/></svg><strong>PostgreSQL</strong><small>索引、Metadata、版本<br>稽核與引用關聯</small></div>
+              </div>
+              <div class="security-note"><svg class="icon"><use href="#i-shield"/></svg><span>原始法院文件不可覆寫；OCR、註解及遮罩均建立衍生版本，重要操作保留稽核紀錄。</span></div>
+            </div>
+          </section>
+
+          <section class="panel" id="reports" aria-labelledby="analytics-title">
+            <h2 class="sr-only" id="analytics-title">文件整理分析</h2>
+            <div class="analytics-grid">
+              <div class="chart-block">
+                <div class="chart-title">文件整理進度</div>
+                <div class="donut-layout">
+                  <div class="donut" role="img" aria-label="文件整理總進度 68%"><div class="donut-center">總進度<b>68%</b></div></div>
+                  <div class="legend">
+                    <div class="legend-row"><span class="legend-dot"></span><span>已完成整理</span><b>68%（1,248）</b></div>
+                    <div class="legend-row"><span class="legend-dot"></span><span>AI 分類中</span><b>18%（331）</b></div>
+                    <div class="legend-row"><span class="legend-dot"></span><span>待人工確認</span><b>9%（165）</b></div>
+                    <div class="legend-row"><span class="legend-dot"></span><span>未處理</span><b>5%（87）</b></div>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-block">
+                <div class="chart-title">近 7 天進度趨勢</div>
+                <svg class="line-chart" viewBox="0 0 460 125" role="img" aria-label="文件整理進度由 54% 上升至 68%">
+                  <g stroke="#e1e9ee" stroke-width="1"><path d="M35 15H450M35 45H450M35 75H450M35 105H450"/><path d="M35 15V105M105 15V105M175 15V105M245 15V105M315 15V105M385 15V105M450 15V105"/></g>
+                  <g fill="#6a7a86" font-size="9"><text x="4" y="18">100%</text><text x="12" y="48">75%</text><text x="12" y="78">50%</text><text x="12" y="108">25%</text></g>
+                  <path d="M35 76 C80 73 95 70 135 68 S205 62 245 61 S315 56 350 52 S410 45 450 37" fill="none" stroke="#3fa8ad" stroke-width="3"/>
+                  <path d="M35 76 C80 73 95 70 135 68 S205 62 245 61 S315 56 350 52 S410 45 450 37 L450 105H35Z" fill="rgba(63,168,173,.11)"/>
+                  <g fill="#3fa8ad"><circle cx="35" cy="76" r="4"/><circle cx="105" cy="70" r="4"/><circle cx="175" cy="65" r="4"/><circle cx="245" cy="61" r="4"/><circle cx="315" cy="56" r="4"/><circle cx="385" cy="48" r="4"/><circle cx="450" cy="37" r="5"/></g>
+                  <g fill="#253845" font-size="11" font-weight="700"><text x="23" y="67">54%</text><text x="430" y="27">68%</text></g>
+                </svg>
+                <div class="chart-caption"><span>5/21</span><span>5/22</span><span>5/23</span><span>5/24</span><span>5/25</span><span>5/26</span><span>5/27</span></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="right-column" aria-label="文件與同步資訊">
+          <section class="panel ai-panel" id="ai-classify" aria-labelledby="ai-title">
+            <div class="panel-header ai-head"><span class="ai-orb">AI</span><h2 class="panel-title" id="ai-title">AI 分類建議</h2><div class="panel-actions"><button class="btn small">全部待確認（<span id="aiHeaderCount">23</span>）</button></div></div>
+            <div class="ai-list" id="aiList">
+              <article class="ai-row" data-file-id="D001"><span class="file-type">PDF</span><div class="file-main"><div class="file-name">民事起訴狀.pdf</div><div class="file-meta">上傳時間 10:32 · KZY001</div></div><div class="ai-controls"><div class="ai-suggestion">建議分類：法院文件（<b>95%</b>）</div><div class="ai-actions"><button class="btn small primary review-btn">確認分類</button><button class="btn small alternate-btn">其他分類</button><button class="more-btn" aria-label="更多選項">⋮</button></div></div></article>
+              <article class="ai-row" data-file-id="D002"><span class="file-type doc">DOC</span><div class="file-main"><div class="file-name">書錄_2026-07-17.docx</div><div class="file-meta">上傳時間 10:15 · LIN023</div></div><div class="ai-controls"><div class="ai-suggestion">建議分類：法院文件（<b>90%</b>）</div><div class="ai-actions"><button class="btn small primary review-btn">確認分類</button><button class="btn small alternate-btn">其他分類</button><button class="more-btn" aria-label="更多選項">⋮</button></div></div></article>
+              <article class="ai-row" data-file-id="D003"><span class="file-type">PDF</span><div class="file-main"><div class="file-name">鑑定報告.pdf</div><div class="file-meta">上傳時間 09:58 · HSU009</div></div><div class="ai-controls"><div class="ai-suggestion">建議分類：鑑定報告（<b>93%</b>）</div><div class="ai-actions"><button class="btn small primary review-btn">確認分類</button><button class="btn small alternate-btn">其他分類</button><button class="more-btn" aria-label="更多選項">⋮</button></div></div></article>
+              <article class="ai-row" data-file-id="D004"><span class="file-type doc">DOC</span><div class="file-main"><div class="file-name">委任契約書.docx</div><div class="file-meta">上傳時間 09:40 · WANG015</div></div><div class="ai-controls"><div class="ai-suggestion">建議分類：契約文件（<b>88%</b>）</div><div class="ai-actions"><button class="btn small primary review-btn">確認分類</button><button class="btn small alternate-btn">其他分類</button><button class="more-btn" aria-label="更多選項">⋮</button></div></div></article>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="recent-title">
+            <div class="panel-header"><h2 class="panel-title" id="recent-title">近期文件動態</h2><div class="panel-actions"><button class="btn ghost small" aria-label="查看全部近期文件"><svg class="icon"><use href="#i-arrow"/></svg></button></div></div>
+            <div>
+              <div class="list-row"><span class="file-type">PDF</span><div><strong>民事起訴狀.pdf</strong><div class="file-meta">由 陳律師 上傳</div></div><time>10:32</time></div>
+              <div class="list-row"><span class="file-type doc">DOC</span><div><strong>書錄_2026-07-17.docx</strong><div class="file-meta">由 助理 張小姐 上傳</div></div><time>10:15</time></div>
+              <div class="list-row"><span class="file-type" style="color:#218a59;background:#eefbf4;border-color:#ccebd9">XLS</span><div><strong>財產明細表_01.jpg</strong><div class="file-meta">由 助理 張小姐 上傳</div></div><time>09:50</time></div>
+            </div>
+            <div class="list-footer"><button class="btn ghost small">查看所有任務<svg class="icon"><use href="#i-arrow"/></svg></button></div>
+          </section>
+
+          <section class="panel" aria-labelledby="sync-title">
+            <div class="panel-header"><h2 class="panel-title" id="sync-title">最近同步紀錄</h2></div>
+            <div id="syncList">
+              <div class="list-row"><span class="status-icon"><svg class="icon"><use href="#i-check"/></svg></span><div>與 Google Drive 同步完成</div><time>今天 10:32 · 新增 36 份</time></div>
+              <div class="list-row"><span class="status-icon"><svg class="icon"><use href="#i-check"/></svg></span><div>與 Google Drive 同步完成</div><time>今天 08:15 · 新增 24 份</time></div>
+              <div class="list-row" id="failedSync"><span class="status-icon error"><svg class="icon"><use href="#i-alert"/></svg></span><div>文件索引同步失敗</div><button class="btn small danger" id="retrySyncBtn">重試</button></div>
+            </div>
+            <div class="list-footer"><button class="btn ghost small">查看完整同步紀錄<svg class="icon"><use href="#i-arrow"/></svg></button></div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="手機快速導覽">
+    <button class="active"><svg class="icon"><use href="#i-grid"/></svg><span>儀表板</span></button>
+    <button><svg class="icon"><use href="#i-briefcase"/></svg><span>案件</span></button>
+    <button id="mobileSearchBtn"><svg class="icon"><use href="#i-search"/></svg><span>搜尋</span></button>
+    <button><svg class="icon"><use href="#i-file"/></svg><span>文件</span></button>
+    <button id="mobileMoreBtn"><svg class="icon"><use href="#i-menu"/></svg><span>更多</span></button>
+  </nav>
+
+  <aside class="drawer" id="caseDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+    <div class="drawer-header"><div><h2 id="drawerTitle">案件詳情</h2><p id="drawerSubtitle"></p></div><button class="icon-btn" data-close-drawer aria-label="關閉案件詳情"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <div class="drawer-body">
+      <div class="alert ai-alert"><svg class="icon"><use href="#i-ai"/></svg><div><strong>AI 案件摘要</strong><br>本摘要依目前已授權文件與時間軸產生，正式法律判斷仍須由律師核准。</div></div>
+      <dl class="detail-grid" id="caseDetails"></dl>
+      <div class="timeline"><h3>近期時間軸</h3><div class="timeline-item"><strong>法院來文已登錄</strong><p>行政助理建立文件索引，AI 已提出分類與期限建議。</p><small>今天 10:32</small></div><div class="timeline-item"><strong>承辦律師確認下一步</strong><p>準備答辯方向、比對證據與確認送達日期。</p><small>昨天 16:20</small></div><div class="timeline-item"><strong>Google Drive 同步</strong><p>新增 7 份文件，原始檔案未經修改。</p><small>昨天 09:15</small></div></div>
+    </div>
+  </aside>
+
+  <div class="modal-layer" id="classificationLayer" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="classificationTitle">
+      <div class="modal-header"><div><h2 id="classificationTitle">確認 AI 文件分類</h2><p id="classificationFile">請核對建議分類與後續影響。</p></div><button class="icon-btn" data-close-modal aria-label="關閉"><svg class="icon"><use href="#i-close"/></svg></button></div>
+      <div class="modal-body">
+        <div class="alert ai-alert"><svg class="icon"><use href="#i-ai"/></svg><div>AI 僅提出建議，不會直接移動法院原件或建立正式期限。確認後才會更新索引並保留稽核紀錄。</div></div>
+        <div class="form-grid" style="margin-top:14px">
+          <div class="field"><label for="matterSelect">所屬案件</label><select id="matterSelect"><option>KZY001 康振宇案件</option><option>LIN023 林○○侵權案件</option><option>HSU009 許○○醫療糾紛</option></select></div>
+          <div class="field"><label for="categorySelect">主要分類</label><select id="categorySelect"><option>02 法院文件</option><option>03 卷證與證據</option><option>05 書狀與草稿</option><option>06 往來與收發文</option><option>99 其他</option></select></div>
+          <div class="field full"><label for="tagInput">標籤</label><input id="tagInput" value="法院原件、待確認期限" aria-describedby="tagHelp"><span class="help" id="tagHelp">可有多個標籤，但僅能有一個主要分類與正式原件位置。</span></div>
+        </div>
+        <dl class="preview-card">
+          <div class="preview-row"><dt>將做什麼</dt><dd>更新文件索引，將檔案移至「02 法院文件」，不改寫原始檔。</dd></div>
+          <div class="preview-row"><dt>判斷依據</dt><dd>文件抬頭、案號與法院欄位相符；AI 信心 95%，仍需人工確認。</dd></div>
+          <div class="preview-row"><dt>資料影響</dt><dd>documents.category_id、Drive parent_id 與 audit_logs 新增一筆紀錄。</dd></div>
+          <div class="preview-row"><dt>可回復性</dt><dd>可重新分類；法院原件、雜湊與版本關係維持不變。</dd></div>
+        </dl>
+      </div>
+      <div class="modal-footer"><button class="btn" data-close-modal>取消</button><button class="btn primary" id="confirmClassificationBtn"><svg class="icon"><use href="#i-check"/></svg>確認分類</button></div>
+    </div>
+  </div>
+
+  <div class="modal-layer" id="newCaseLayer" aria-hidden="true">
+    <form class="modal" id="newCaseForm" novalidate>
+      <div class="modal-header"><div><h2>新增案件</h2><p>建立案件主檔；正式環境可同步建立 Google Drive 標準資料夾。</p></div><button class="icon-btn" type="button" data-close-modal aria-label="關閉"><svg class="icon"><use href="#i-close"/></svg></button></div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field"><label for="caseCode">案件編號 *</label><input id="caseCode" name="caseCode" placeholder="例如 LIU028" required pattern="[A-Za-z]{2,8}[0-9]{2,6}"><span class="error-text">請輸入英文加數字的案件編號。</span></div>
+          <div class="field"><label for="caseName">案件名稱 *</label><input id="caseName" name="caseName" placeholder="例如 劉○○損害賠償案件" required><span class="error-text">請輸入案件名稱。</span></div>
+          <div class="field"><label for="caseCourt">法院</label><input id="caseCourt" name="caseCourt" placeholder="例如 臺灣臺北地方法院"></div>
+          <div class="field"><label for="caseType">案件類型</label><select id="caseType"><option>民事</option><option>刑事</option><option>家事</option><option>行政</option><option>非訟</option></select></div>
+          <div class="field full"><label for="handoff">收案與交接摘要</label><textarea id="handoff" placeholder="記錄案情重點、下一步、風險、期限來源與負責人。"></textarea></div>
+        </div>
+        <div class="alert" style="margin-top:14px"><svg class="icon"><use href="#i-alert"/></svg><div>本頁為前端可操作原型。建立動作目前僅更新瀏覽器畫面，不會寫入 PostgreSQL 或建立 Drive 資料夾。</div></div>
+      </div>
+      <div class="modal-footer"><button class="btn" type="button" data-close-modal>取消</button><button class="btn primary" type="submit">建立案件</button></div>
+    </form>
+  </div>
+
+  <div class="modal-layer" id="commandLayer" aria-hidden="true">
+    <div class="modal command-modal" role="dialog" aria-modal="true" aria-label="全域搜尋與快速操作">
+      <div class="command-input-wrap"><svg class="icon"><use href="#i-search"/></svg><label class="sr-only" for="commandInput">搜尋案件、文件或快速操作</label><input class="command-input" id="commandInput" placeholder="輸入案件、文件或操作，例如「新增案件」" autocomplete="off"></div>
+      <div class="command-results" id="commandResults"></div>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  /*
+    正式串接位置（前端目前以可操作模擬資料代替）：
+    GET  /api/v1/matters
+    POST /api/v1/matters
+    POST /api/v1/integrations/google-drive/sync
+    POST /api/v1/documents/:id/confirm-classification
+    GET  /api/v1/notifications
+    所有正式 API 必須在伺服器端先完成 RBAC／案件 ACL，再執行資料查詢或 AI/RAG 檢索。
+  */
+
+  const $ = (selector, scope = document) => scope.querySelector(selector);
+  const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
+  const app = $("#app");
+  const sidebar = $("#sidebar");
+  const sidebarScrim = $("#sidebarScrim");
+  const menuBtn = $("#menuBtn");
+  const notificationBtn = $("#notificationBtn");
+  const notificationPopover = $("#notificationPopover");
+  const profileBtn = $("#profileBtn");
+  const profilePopover = $("#profilePopover");
+  const classificationLayer = $("#classificationLayer");
+  const newCaseLayer = $("#newCaseLayer");
+  const commandLayer = $("#commandLayer");
+  const commandInput = $("#commandInput");
+  const commandResults = $("#commandResults");
+  const caseDrawer = $("#caseDrawer");
+  let activeAiRow = null;
+  let lastFocused = null;
+  let selectedCommand = 0;
+
+  const storage = {
+    get(key, fallback) {
+      try { return localStorage.getItem(key) || fallback; } catch { return fallback; }
+    },
+    set(key, value) {
+      try { localStorage.setItem(key, value); } catch {}
+    }
+  };
+
+  const apiMock = {
+    syncDrive: () => new Promise(resolve => setTimeout(() => resolve({ added: 4, time: "剛剛" }), 950)),
+    confirmClassification: data => new Promise(resolve => setTimeout(() => resolve({ ok: true, data }), 650)),
+    createMatter: data => new Promise(resolve => setTimeout(() => resolve({ id: Date.now(), ...data }), 700))
+  };
+
+  function useIcon(id) {
+    return `<svg class="icon" aria-hidden="true"><use href="#${id}"></use></svg>`;
+  }
+
+  function toast(title, message, type = "success") {
+    const node = document.createElement("div");
+    node.className = `toast ${type}`;
+    node.innerHTML = `${useIcon(type === "error" ? "i-alert" : "i-check")}<p><strong>${escapeHtml(title)}</strong>${escapeHtml(message)}</p><button aria-label="關閉通知">×</button>`;
+    $("#toastRegion").append(node);
+    const remove = () => node.remove();
+    $("button", node).addEventListener("click", remove);
+    setTimeout(remove, 4300);
+  }
+
+  function escapeHtml(value = "") {
+    return String(value).replace(/[&<>"']/g, char => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[char]));
+  }
+
+  function closePopovers(except) {
+    [notificationPopover, profilePopover].forEach(pop => {
+      if (pop !== except) pop.classList.remove("open");
+    });
+    notificationBtn.setAttribute("aria-expanded", notificationPopover.classList.contains("open"));
+    profileBtn.setAttribute("aria-expanded", profilePopover.classList.contains("open"));
+  }
+
+  function togglePopover(popover, button) {
+    const opening = !popover.classList.contains("open");
+    closePopovers(popover);
+    popover.classList.toggle("open", opening);
+    button.setAttribute("aria-expanded", String(opening));
+  }
+
+  notificationBtn.addEventListener("click", event => {
+    event.stopPropagation();
+    togglePopover(notificationPopover, notificationBtn);
+  });
+  profileBtn.addEventListener("click", event => {
+    event.stopPropagation();
+    togglePopover(profilePopover, profileBtn);
+  });
+  document.addEventListener("click", event => {
+    if (!event.target.closest(".popover") && !event.target.closest("#notificationBtn") && !event.target.closest("#profileBtn")) closePopovers();
+  });
+
+  function setSidebar(open) {
+    sidebar.classList.toggle("open", open);
+    menuBtn.setAttribute("aria-expanded", String(open));
+    document.body.style.overflow = open ? "hidden" : "";
+  }
+  menuBtn.addEventListener("click", () => setSidebar(!sidebar.classList.contains("open")));
+  sidebarScrim.addEventListener("click", () => setSidebar(false));
+  $("#mobileMoreBtn").addEventListener("click", () => setSidebar(true));
+  $$(".sidebar .nav-item").forEach(link => link.addEventListener("click", () => {
+    if (window.innerWidth <= 900) setSidebar(false);
+  }));
+
+  const density = storage.get("lawdesk-density", "comfortable");
+  if (density === "compact") app.dataset.density = "compact";
+  $$("[data-density-action]").forEach(btn => btn.addEventListener("click", () => {
+    const next = btn.dataset.densityAction;
+    if (next === "compact") app.dataset.density = "compact";
+    else delete app.dataset.density;
+    storage.set("lawdesk-density", next);
+    closePopovers();
+    toast("顯示密度已更新", next === "compact" ? "已切換為緊湊密度。" : "已切換為舒適密度。");
+  }));
+
+  function getFocusable(container) {
+    return $$('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])', container)
+      .filter(el => el.offsetParent !== null);
+  }
+
+  function trapFocus(event, container) {
+    if (event.key !== "Tab") return;
+    const items = getFocusable(container);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
+
+  function openLayer(layer, focusSelector) {
+    lastFocused = document.activeElement;
+    layer.classList.add("open");
+    layer.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => $(focusSelector, layer)?.focus());
+  }
+
+  function closeLayer(layer) {
+    layer.classList.remove("open");
+    layer.setAttribute("aria-hidden", "true");
+    if (!caseDrawer.classList.contains("open") && !sidebar.classList.contains("open")) document.body.style.overflow = "";
+    lastFocused?.focus?.();
+  }
+
+  $$(".modal-layer").forEach(layer => {
+    layer.addEventListener("mousedown", event => {
+      if (event.target === layer) closeLayer(layer);
+    });
+    layer.addEventListener("keydown", event => trapFocus(event, $(".modal", layer)));
+    $$("[data-close-modal]", layer).forEach(btn => btn.addEventListener("click", () => closeLayer(layer)));
+  });
+
+  function openNewCase() {
+    closePopovers();
+    openLayer(newCaseLayer, "#caseCode");
+  }
+  $("#newCaseBtn").addEventListener("click", openNewCase);
+  $("#openNewCaseFromMenu").addEventListener("click", openNewCase);
+
+  const form = $("#newCaseForm");
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    const required = [$("#caseCode"), $("#caseName")];
+    let valid = true;
+    required.forEach(input => {
+      const field = input.closest(".field");
+      const ok = input.checkValidity() && input.value.trim();
+      field.classList.toggle("invalid", !ok);
+      valid = valid && ok;
+    });
+    if (!valid) {
+      required.find(input => !input.checkValidity() || !input.value.trim())?.focus();
+      toast("資料尚未完成", "請修正紅框欄位後再建立案件。", "error");
+      return;
+    }
+    const submit = $('button[type="submit"]', form);
+    submit.disabled = true;
+    submit.classList.add("loading");
+    submit.innerHTML = `${useIcon("i-refresh")}建立中`;
+    const matter = await apiMock.createMatter({
+      code: $("#caseCode").value.trim().toUpperCase(),
+      name: $("#caseName").value.trim(),
+      court: $("#caseCourt").value.trim() || "待確認",
+      type: $("#caseType").value
+    });
+    const card = document.createElement("button");
+    card.className = "case-card";
+    card.dataset.status = "active new";
+    card.dataset.case = matter.code;
+    card.dataset.name = matter.name;
+    card.dataset.stage = "新進案";
+    card.innerHTML = `<span class="case-code">${escapeHtml(matter.code)}</span><div class="case-name">${escapeHtml(matter.name)}</div><div class="case-meta"><span>剛剛建立</span><span class="tag">${escapeHtml(matter.type)}</span></div>`;
+    $(".case-list", $('[data-stage-col="0"]')).prepend(card);
+    bindCaseCard(card);
+    submit.disabled = false;
+    submit.classList.remove("loading");
+    submit.textContent = "建立案件";
+    form.reset();
+    closeLayer(newCaseLayer);
+    toast("案件已建立（前端模擬）", `${matter.code} ${matter.name} 已加入新進案。`);
+  });
+  $$("input", form).forEach(input => input.addEventListener("input", () => input.closest(".field").classList.remove("invalid")));
+
+  const commands = [
+    { type:"操作", title:"新增案件", subtitle:"建立案件主檔與交接摘要", icon:"i-plus", action:openNewCase },
+    { type:"案件", title:"KZY001 康振宇案件", subtitle:"待開庭 · 臺北地方法院", icon:"i-briefcase", action:() => openDrawer({case:"KZY001",name:"康振宇案件",stage:"待開庭"}) },
+    { type:"案件", title:"LIN023 林○○侵權案件", subtitle:"資料整理中 · AI 分類待確認", icon:"i-briefcase", action:() => openDrawer({case:"LIN023",name:"林○○侵權案件",stage:"資料整理中"}) },
+    { type:"文件", title:"民事起訴狀.pdf", subtitle:"KZY001 · 法院文件 · 待人工確認", icon:"i-file", action:() => document.querySelector('[data-file-id="D001"] .review-btn').click() },
+    { type:"文件", title:"鑑定報告.pdf", subtitle:"HSU009 · 鑑定報告 · AI 信心 93%", icon:"i-file", action:() => document.querySelector('[data-file-id="D003"] .review-btn').click() },
+    { type:"操作", title:"同步 Google Drive", subtitle:"掃描系統根資料夾的新檔案與 Metadata", icon:"i-refresh", action:() => $("#syncBtn").click() },
+    { type:"導覽", title:"查看逾期待辦", subtitle:"篩選已逾期且尚未完成的案件任務", icon:"i-alert", action:() => document.querySelector('[data-filter="overdue"]').click() }
+  ];
+
+  function renderCommands(query = "") {
+    const normalized = query.trim().toLowerCase();
+    const results = commands.filter(item => `${item.type} ${item.title} ${item.subtitle}`.toLowerCase().includes(normalized));
+    selectedCommand = Math.min(selectedCommand, Math.max(0, results.length - 1));
+    commandResults.innerHTML = results.length ? results.map((item, index) => `
+      <button class="command-item ${index === selectedCommand ? "active" : ""}" data-command-index="${commands.indexOf(item)}">
+        <span class="cmd-icon">${useIcon(item.icon)}</span>
+        <span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.type)} · ${escapeHtml(item.subtitle)}</small></span>
+      </button>`).join("") : `<div class="command-empty">${useIcon("i-search")}<p>找不到符合的案件、文件或操作。</p></div>`;
+    $$("[data-command-index]", commandResults).forEach(btn => btn.addEventListener("click", () => executeCommand(Number(btn.dataset.commandIndex))));
+  }
+
+  function openCommand(value = "") {
+    closePopovers();
+    selectedCommand = 0;
+    commandInput.value = value;
+    renderCommands(value);
+    openLayer(commandLayer, "#commandInput");
+  }
+  function executeCommand(index) {
+    const command = commands[index];
+    if (!command) return;
+    closeLayer(commandLayer);
+    setTimeout(command.action, 20);
+  }
+  $("#globalSearch").addEventListener("focus", event => {
+    event.currentTarget.blur();
+    openCommand();
+  });
+  $("#mobileSearchBtn").addEventListener("click", () => openCommand());
+  commandInput.addEventListener("input", () => { selectedCommand = 0; renderCommands(commandInput.value); });
+  commandInput.addEventListener("keydown", event => {
+    const visible = $$("[data-command-index]", commandResults);
+    if (event.key === "ArrowDown") { event.preventDefault(); selectedCommand = Math.min(selectedCommand + 1, visible.length - 1); renderCommands(commandInput.value); }
+    if (event.key === "ArrowUp") { event.preventDefault(); selectedCommand = Math.max(selectedCommand - 1, 0); renderCommands(commandInput.value); }
+    if (event.key === "Enter" && visible[selectedCommand]) { event.preventDefault(); visible[selectedCommand].click(); }
+  });
+  document.addEventListener("keydown", event => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); openCommand(); }
+    if (event.key === "Escape") {
+      const openModal = [...$$(".modal-layer.open")].pop();
+      if (openModal) closeLayer(openModal);
+      else if (caseDrawer.classList.contains("open")) closeDrawer();
+      else if (sidebar.classList.contains("open")) setSidebar(false);
+      else closePopovers();
+    }
+  });
+
+  const caseData = {
+    KZY001:{court:"臺灣臺北地方法院",number:"115年度訴字第101號",owner:"陳律師",deadline:"2026-06-03",risk:"答辯期限剩 2 天",next:"確認送達日與答辯證據"},
+    LIN023:{court:"臺灣新北地方法院",number:"115年度訴字第238號",owner:"林律師",deadline:"2026-06-10",risk:"7 份文件待確認分類",next:"完成人證與書證索引"},
+    CHEN027:{court:"臺灣新北地方法院",number:"115年度簡字第72號",owner:"陳律師",deadline:"已逾期",risk:"租金明細任務已逾期",next:"補正金額與送達資料"},
+    WANG015:{court:"臺灣臺北地方法院",number:"115年度重訴字第45號",owner:"王律師",deadline:"2026-06-18",risk:"OCR 尚未完成",next:"確認契約與付款證明"},
+    HSU009:{court:"臺灣士林地方法院",number:"115年度醫字第9號",owner:"許律師",deadline:"2026-06-20",risk:"鑑定報告待確認",next:"建立醫療事實時間軸"},
+    CHEN014:{court:"臺灣臺北地方法院",number:"115年度家繼訴字第14號",owner:"陳律師",deadline:"—",risk:"低",next:"封存與結案檢查"},
+    WANG008:{court:"智慧財產及商業法院",number:"114年度民著訴字第8號",owner:"王律師",deadline:"—",risk:"低",next:"封存卷證"}
+  };
+
+  function openDrawer(data) {
+    closeLayer(commandLayer);
+    const details = caseData[data.case] || {court:"待確認",number:"待建檔",owner:"未指派",deadline:"待確認",risk:"尚未評估",next:"完成收案資料"};
+    $("#drawerTitle").textContent = `${data.case} ${data.name}`;
+    $("#drawerSubtitle").textContent = `${data.stage} · 案件資料與近期時間軸`;
+    $("#caseDetails").innerHTML = `
+      <div class="detail-card"><dt>法院／案號</dt><dd>${escapeHtml(details.court)}<br>${escapeHtml(details.number)}</dd></div>
+      <div class="detail-card"><dt>主責律師</dt><dd>${escapeHtml(details.owner)}</dd></div>
+      <div class="detail-card"><dt>下一期限</dt><dd>${escapeHtml(details.deadline)}</dd></div>
+      <div class="detail-card"><dt>風險提示</dt><dd>${escapeHtml(details.risk)}</dd></div>
+      <div class="detail-card" style="grid-column:1/-1"><dt>下一步</dt><dd>${escapeHtml(details.next)}</dd></div>`;
+    lastFocused = document.activeElement;
+    caseDrawer.classList.add("open");
+    document.body.style.overflow = "hidden";
+    $('[data-close-drawer]', caseDrawer).focus();
+  }
+  function closeDrawer() {
+    caseDrawer.classList.remove("open");
+    document.body.style.overflow = "";
+    lastFocused?.focus?.();
+  }
+  function bindCaseCard(card) {
+    card.addEventListener("click", () => openDrawer({
+      case: card.dataset.case,
+      name: card.dataset.name,
+      stage: card.dataset.stage
+    }));
+  }
+  $$(".case-card").forEach(bindCaseCard);
+  $('[data-close-drawer]').addEventListener("click", closeDrawer);
+  caseDrawer.addEventListener("keydown", event => trapFocus(event, caseDrawer));
+
+  $$(".stage-tabs button").forEach(button => button.addEventListener("click", () => {
+    $$(".stage-tabs button").forEach(item => item.classList.toggle("active", item === button));
+    $$(".kanban-col").forEach((col, index) => col.classList.toggle("mobile-active", index === Number(button.dataset.stage)));
+  }));
+
+  function clearCaseFilter() {
+    $$(".kpi-card").forEach(card => { card.classList.remove("selected"); card.setAttribute("aria-pressed", "false"); });
+    $$(".case-card").forEach(card => card.hidden = false);
+    $$(".kanban-col").forEach(col => col.hidden = false);
+    $("#caseEmpty").hidden = true;
+    $("#kanban").hidden = false;
+    $("#clearFilterBtn").hidden = true;
+  }
+
+  $$(".kpi-card").forEach(kpi => kpi.addEventListener("click", () => {
+    const wasSelected = kpi.classList.contains("selected");
+    clearCaseFilter();
+    if (wasSelected) return;
+    kpi.classList.add("selected");
+    kpi.setAttribute("aria-pressed", "true");
+    const filter = kpi.dataset.filter;
+    let visible = 0;
+    $$(".case-card").forEach(card => {
+      const matches = filter === "active" ? card.dataset.status.includes("active") : card.dataset.status.includes(filter);
+      card.hidden = !matches;
+      if (matches) visible++;
+    });
+    $$(".kanban-col").forEach(col => {
+      col.hidden = !$$(".case-card:not([hidden])", col).length;
+    });
+    $("#caseEmpty").hidden = visible > 0;
+    $("#kanban").hidden = visible === 0;
+    $("#clearFilterBtn").hidden = false;
+    $("#cases").scrollIntoView({behavior:"smooth", block:"start"});
+  }));
+  $("#clearFilterBtn").addEventListener("click", clearCaseFilter);
+  $("#emptyClearBtn").addEventListener("click", clearCaseFilter);
+
+  function openClassification(row, alternate = false) {
+    activeAiRow = row;
+    const file = $(".file-name", row).textContent;
+    $("#classificationFile").textContent = `${file}：請核對建議分類與後續影響。`;
+    if (alternate) $("#categorySelect").value = "99 其他";
+    else $("#categorySelect").value = $(".ai-suggestion", row).textContent.includes("鑑定") ? "03 卷證與證據" : "02 法院文件";
+    openLayer(classificationLayer, "#matterSelect");
+  }
+
+  $$(".review-btn").forEach(btn => btn.addEventListener("click", () => openClassification(btn.closest(".ai-row"))));
+  $$(".alternate-btn").forEach(btn => btn.addEventListener("click", () => openClassification(btn.closest(".ai-row"), true)));
+
+  $("#confirmClassificationBtn").addEventListener("click", async () => {
+    if (!activeAiRow) return;
+    const button = $("#confirmClassificationBtn");
+    const fileName = $(".file-name", activeAiRow).textContent;
+    button.disabled = true;
+    button.classList.add("loading");
+    button.innerHTML = `${useIcon("i-refresh")}處理中`;
+    await apiMock.confirmClassification({
+      file_id: activeAiRow.dataset.fileId,
+      matter: $("#matterSelect").value,
+      category: $("#categorySelect").value,
+      tags: $("#tagInput").value
+    });
+    activeAiRow.style.opacity = ".45";
+    activeAiRow.style.pointerEvents = "none";
+    $(".ai-suggestion", activeAiRow).innerHTML = `已人工確認：<b>${escapeHtml($("#categorySelect").selectedOptions[0].textContent)}</b>`;
+    $(".ai-actions", activeAiRow).innerHTML = `<span class="tag" style="color:var(--success);background:#e8f5e9">${useIcon("i-check")} 已確認</span>`;
+    const current = Math.max(0, (parseInt($("#reviewCount").textContent, 10) || 0) - 1);
+    $("#reviewCount").innerHTML = `${current}<small> 件</small>`;
+    $("#aiHeaderCount").textContent = current;
+    button.disabled = false;
+    button.classList.remove("loading");
+    button.innerHTML = `${useIcon("i-check")}確認分類`;
+    closeLayer(classificationLayer);
+    toast("分類已確認", `${fileName} 已更新索引；原始檔案及版本鏈維持不變。`);
+    activeAiRow = null;
+  });
+
+  async function runDriveSync(button = $("#syncBtn")) {
+    if (button.disabled) return;
+    button.disabled = true;
+    button.classList.add("loading");
+    const original = button.innerHTML;
+    button.innerHTML = useIcon("i-refresh");
+    toast("正在同步", "正在掃描 Google Drive 的新檔案與 Metadata。");
+    const result = await apiMock.syncDrive();
+    button.disabled = false;
+    button.classList.remove("loading");
+    button.innerHTML = original;
+    const current = (parseInt($("#newDocsCount").textContent, 10) || 0) + result.added;
+    $("#newDocsCount").innerHTML = `${current}<small> 份</small>`;
+    const row = document.createElement("div");
+    row.className = "list-row";
+    row.innerHTML = `<span class="status-icon">${useIcon("i-check")}</span><div>與 Google Drive 同步完成</div><time>${result.time} · 新增 ${result.added} 份</time>`;
+    $("#syncList").prepend(row);
+    toast("同步完成", `新增 ${result.added} 份檔案；待分類文件已送入人工確認流程。`);
+  }
+  $("#syncBtn").addEventListener("click", () => runDriveSync());
+
+  $("#retrySyncBtn").addEventListener("click", async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.classList.add("loading");
+    button.innerHTML = `${useIcon("i-refresh")}重試中`;
+    await new Promise(resolve => setTimeout(resolve, 850));
+    const row = $("#failedSync");
+    $(".status-icon", row).classList.remove("error");
+    $(".status-icon", row).innerHTML = useIcon("i-check");
+    row.children[1].textContent = "文件索引同步已恢復";
+    button.replaceWith(Object.assign(document.createElement("time"), {textContent:"剛剛"}));
+    toast("重試成功", "失敗的文件索引工作已完成。");
+  });
+
+  // 以 400ms 短暫骨架呈現初次載入狀態，避免畫面閃爍並示範 Loading 狀態。
+  const firstRows = $$(".right-column .list-row").slice(0, 2);
+  firstRows.forEach(row => row.classList.add("skeleton"));
+  setTimeout(() => firstRows.forEach(row => row.classList.remove("skeleton")), 400);
+
+  // 桌面上調整到手機版時，確保僅顯示目前選取的案件階段。
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 900) setSidebar(false);
+  });
+
+  renderCommands();
+})();
+</script>
+</body>
+</html>
