@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "project": "律所案件管理暨 AI 法律工作臺",
+    "mode": "frontend-mock",
+    "updated_at": "2026-07-21"
+  },
+  "current_user": {
+    "name": "陳律師",
+    "role": "合夥律師"
+  },
+  "cases": [
+    {"id":"KZY001","name":"塗銷抵押權登記","court":"臺灣臺北地方法院","case_number":"115年度訴字第718號","status":"進行中","progress":72},
+    {"id":"LIN023","name":"侵權行為損害賠償","court":"臺灣新北地方法院","case_number":"115年度訴字第118號","status":"進行中","progress":54},
+    {"id":"CHEN014","name":"遺產分割","court":"臺灣臺北地方法院","case_number":"115年度家繼訴字第21號","status":"待開庭","progress":88}
+  ],
+  "documents": [
+    {"name":"民事起訴狀.pdf","case_id":"KZY001","suggested_category":"法院文件","confidence":95,"status":"待確認"},
+    {"name":"筆錄_2026-07-17.docx","case_id":"LIN023","suggested_category":"筆錄資料","confidence":90,"status":"待確認"},
+    {"name":"鑑定報告.pdf","case_id":"CHEN014","suggested_category":"卷證資料","confidence":93,"status":"待確認"}
+  ]
+}
